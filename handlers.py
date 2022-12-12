@@ -1,12 +1,12 @@
 from selenium.webdriver.common.by import By
 
-from common import write_to_cache, read_cache, RARITY_DICT, print_time
-from settings import STICKERS_AUTOBUY_TERMS, FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING, \
-    REPEAT_MSG
-from telegram import send_to_channel
+from common import RARITY_DICT, print_time, read_cache, write_to_cache
+from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS,
+                      REPEAT_MSG, STICKER_SEARCH_STRING,
+                      STICKERS_AUTOBUY_TERMS)
+from telegram import send_notification
 from waxpeer_api import buy
 
-cnt = 0
 
 def parse_item(item):
     item_url = item.find_element(By.XPATH, './div[@class="item_body"]/a').get_attribute('href')
@@ -40,10 +40,8 @@ def parse_item(item):
 
     item_handler(item_content)
     write_to_cache(item_content['id'])
-    print(item_content['id'])
 
 
-@print_time
 def get_stickers(item):
     stickers = []
     sum_price = 0
@@ -73,13 +71,7 @@ def get_stickers(item):
     return stickers, round(sum_price, 2)
 
 
-@print_time
 def item_handler(item):
-    msg_to_send = f'Name: {item["title"]}\n' \
-                  f'Link: {item["url"]}\n' \
-                  f'Float: {item["item_float"]}\n' \
-                  f'Price: {item["price"]}\n' \
-                  f'Steam price: {item["steam_price"]}\n\n'
 
     if item['stickers']:
         stickers_str = '\n\n'.join([f'{i["name"]}\nWear:{i["wear"]}\nPrice: {i["price"]}' for i in item['stickers']])

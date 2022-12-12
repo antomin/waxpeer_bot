@@ -1,4 +1,3 @@
-import os
 import time
 
 import undetected_chromedriver
@@ -13,6 +12,15 @@ RARITY_DICT = {
     'color: rgb(211, 44, 230);': 'Classified',
     'color: rgb(235, 75, 75);': 'Covert'
 }
+
+
+def print_time(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        res = func(*args, **kwargs)
+        print(f'{func.__name__}: {time.time() - start_time}c.')
+        return res
+    return wrapper
 
 
 def write_to_cache(item_id):
@@ -31,12 +39,3 @@ def get_driver():
     options.add_argument("--start-maximized")
     options.headless = HEADLESS
     return undetected_chromedriver.Chrome(options=options)
-
-
-def print_time(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        res = func(*args, **kwargs)
-        print(f'{func.__name__}: {time.time() - start_time}c.')
-        return res
-    return wrapper
