@@ -1,3 +1,8 @@
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HEADLESS = False
+
 REPEAT_MSG = False
 
 TG_TOKEN = '5626409225:AAGd_x4-uKVal507aOGW8cq2Mva3WT8nR20'

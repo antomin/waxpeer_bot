@@ -1,13 +1,49 @@
 from selenium.webdriver.common.by import By
-from settings import STICKERS_AUTOBUY_TERMS, FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING
+
+from common import write_to_cache, read_cache, RARITY_DICT, print_time
+from settings import STICKERS_AUTOBUY_TERMS, FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING, \
+    REPEAT_MSG
 from telegram import send_to_channel
 from waxpeer_api import buy
 
+cnt = 0
 
-def parse_item(html):
+def parse_item(item):
+    item_url = item.find_element(By.XPATH, './div[@class="item_body"]/a').get_attribute('href')
+    item_id = item_url.split('/')[-1]
+    if not REPEAT_MSG and item_id in read_cache():
+        return
+    stickers_info = get_stickers(item)
+    if stickers_info == 'search_not_found':
+        return
+    price = item.find_element(By.XPATH, './/div[@class="prices f"]//span[@class="c-usd"]').text
+    steam_price = item.find_element(By.XPATH, './/div[@class="item_top f ft gray"]//span[@class="c-usd"]').text
+    name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
+    name_gray = item.find_element(By.XPATH, './/div[@class="gray"]').text
+    rarity = item.find_element(By.XPATH, './/div[@class="thumb_bg"]').get_attribute('style')
+    try:
+        item_float = item.find_element(By.XPATH, './/p[@class="num"]').text
+    except:
+        item_float = None
+
+    item_content = {
+        'id': item_url.split('/')[-1],
+        'url': item_url,
+        'price': float(price.replace(' ', '')),
+        'steam_price': float(steam_price.replace(' ', '')),
+        'title': name_model.replace('\n', ' ') + ' (' + name_gray + ')',
+        'item_float': float(item_float) if item_float else None,
+        'stickers': stickers_info[0],
+        'stickers_sum_price': stickers_info[1],
+        'rarity': RARITY_DICT.get(rarity)
+    }
+
+    item_handler(item_content)
+    write_to_cache(item_content['id'])
+    print(item_content['id'])
 
 
-
+@print_time
 def get_stickers(item):
     stickers = []
     sum_price = 0
@@ -37,6 +73,7 @@ def get_stickers(item):
     return stickers, round(sum_price, 2)
 
 
+@print_time
 def item_handler(item):
     msg_to_send = f'Name: {item["title"]}\n' \
                   f'Link: {item["url"]}\n' \
