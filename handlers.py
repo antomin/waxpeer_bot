@@ -4,7 +4,7 @@ from common import RARITY_DICT, print_time, read_cache, write_to_cache
 from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS,
                       REPEAT_MSG, STICKER_SEARCH_STRING,
                       STICKERS_AUTOBUY_TERMS)
-from telegram import send_notification
+from telegram import send_notification, send_autobuy_notification
 from waxpeer_api import buy
 
 
@@ -72,25 +72,21 @@ def get_stickers(item):
 
 
 def item_handler(item):
-
+    # AUTO BUY BY STICKERS SUM PRICE
     if item['stickers']:
-        stickers_str = '\n\n'.join([f'{i["name"]}\nWear:{i["wear"]}\nPrice: {i["price"]}' for i in item['stickers']])
-        msg_to_send += f'{stickers_str}\n\n' \
-                       f'Total price: {item["stickers_sum_price"]}'
-
-        # AUTO BUY BY STICKERS SUM PRICE
         for item_price, item_stickers_sum in STICKERS_AUTOBUY_TERMS.items():
             if item['price'] >= item_price and item['stickers_sum_price'] >= item_stickers_sum:
-                send_to_channel(msg_to_send)
+                send_autobuy_notification(item)
                 buy(item)
                 return
 
     # AUTO BUY BY FLOAT
     if item['item_float'] and item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
             item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
+        send_autobuy_notification(item)
         buy(item)
         return
 
     # NOTIFICATION BY FLOAT
     if item['item_float'] and item['item_float'] <= FLOAT_NOTIFICATION_TERMS[item['rarity']]:
-        send_to_channel(msg_to_send)
+        send_notification(item)

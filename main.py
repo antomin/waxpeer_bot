@@ -7,6 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from common import get_driver
 from handlers import parse_item
+from telegram import bot
 
 URL = 'https://waxpeer.com/?game=csgo&sort=DESC&order=date&all=0&exterior=FN&exterior=MW&exterior=FT&exterior=WW&exterior=BS'
 
@@ -43,5 +44,6 @@ def main():
 
 
 if __name__ == '__main__':
+    # bot.polling(none_stop=True, allowed_updates=False)
     while True:
         main()

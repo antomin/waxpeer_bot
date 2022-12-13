@@ -1,19 +1,27 @@
-import requests
-# import telebot
+import telebot
+from telebot import types
 
 from settings import CHAT_ID, TG_TOKEN
+from common import generate_message
+from waxpeer_api import buy
+
+bot = telebot.TeleBot(TG_TOKEN)
 
 
-def send_to_channel(message):
-    requests.get(f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={message}')
+def send_notification(item):
+    message = generate_message(item)
+    markup = types.InlineKeyboardMarkup()
+    markup.add(
+        types.InlineKeyboardButton('Open', url=item['url']),
+        types.InlineKeyboardButton('Buy', callback_data=buy(item['id'])),
+    )
+    bot.send_message(CHAT_ID, message, disable_web_page_preview=True, reply_markup=markup)
 
 
-# bot = telebot.TeleBot(TG_TOKEN)
-#
-# def send_notification(item):
-#     msg_to_send = f'Name: {item["title"]}\n' \
-#                   f'Link: {item["url"]}\n' \
-#                   f'Float: {item["item_float"]}\n' \
-#                   f'Price: {item["price"]}\n' \
-#                   f'Steam price: {item["steam_price"]}\n\n'
-#     bot.send_message(CHAT_ID, message)
+def send_autobuy_notification(item):
+    message = generate_message(item)
+    markup = types.InlineKeyboardMarkup()
+    markup.add(
+        types.InlineKeyboardButton('Open', url=item['url']),
+    )
+    bot.send_message(CHAT_ID, 'ПРОДАЖА!!!\n' + message, disable_web_page_preview=True, reply_markup=markup)

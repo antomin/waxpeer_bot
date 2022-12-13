@@ -39,3 +39,17 @@ def get_driver():
     options.add_argument("--start-maximized")
     options.headless = HEADLESS
     return undetected_chromedriver.Chrome(options=options)
+
+
+def generate_message(item):
+    message = f'Name: {item["title"]}\n' \
+              f'Link: {item["url"]}\n' \
+              f'Float: {item["item_float"]}\n' \
+              f'Price: {item["price"]}\n' \
+              f'Steam price: {item["steam_price"]}\n\n'
+    if item['stickers']:
+        stickers_str = '\n\n'.join([f'{i["name"]}\nWear:{i["wear"]}\nPrice: {i["price"]}' for i in item['stickers']])
+        message += f'{stickers_str}\n\n' \
+                   f'Total price: {item["stickers_sum_price"]}'
+
+    return message
