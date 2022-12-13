@@ -36,7 +36,8 @@ def read_cache():
 
 def get_driver():
     options = undetected_chromedriver.ChromeOptions()
-    options.add_argument("--start-maximized")
+    options.add_argument('--start-maximized')
+    options.add_argument('--lang=en-US')
     options.headless = HEADLESS
     return undetected_chromedriver.Chrome(options=options)
 

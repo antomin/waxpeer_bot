@@ -1,9 +1,8 @@
 from selenium.webdriver.common.by import By
 
-from common import RARITY_DICT, print_time, read_cache, write_to_cache
-from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS,
-                      REPEAT_MSG, STICKER_SEARCH_STRING,
-                      STICKERS_AUTOBUY_TERMS)
+from common import RARITY_DICT, read_cache, write_to_cache
+from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING,
+                      STICKERS_AUTOBUY_TERMS, EXCEPTIONS, CACHE_ENABLE)
 from telegram import send_notification, send_autobuy_notification
 from waxpeer_api import buy
 
@@ -11,14 +10,17 @@ from waxpeer_api import buy
 def parse_item(item):
     item_url = item.find_element(By.XPATH, './div[@class="item_body"]/a').get_attribute('href')
     item_id = item_url.split('/')[-1]
-    if not REPEAT_MSG and item_id in read_cache():
+    if CACHE_ENABLE and item_id in read_cache():
         return
+    name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
+    for string in EXCEPTIONS:
+        if string in name_model:
+            return
     stickers_info = get_stickers(item)
     if stickers_info == 'search_not_found':
         return
     price = item.find_element(By.XPATH, './/div[@class="prices f"]//span[@class="c-usd"]').text
     steam_price = item.find_element(By.XPATH, './/div[@class="item_top f ft gray"]//span[@class="c-usd"]').text
-    name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
     name_gray = item.find_element(By.XPATH, './/div[@class="gray"]').text
     rarity = item.find_element(By.XPATH, './/div[@class="thumb_bg"]').get_attribute('style')
     try:
@@ -39,7 +41,8 @@ def parse_item(item):
     }
 
     item_handler(item_content)
-    write_to_cache(item_content['id'])
+    if CACHE_ENABLE:
+        write_to_cache(item_content['id'])
 
 
 def get_stickers(item):
@@ -75,7 +78,7 @@ def item_handler(item):
     # AUTO BUY BY STICKERS SUM PRICE
     if item['stickers']:
         for item_price, item_stickers_sum in STICKERS_AUTOBUY_TERMS.items():
-            if item['price'] >= item_price and item['stickers_sum_price'] >= item_stickers_sum:
+            if item['price'] <= item_price and item['stickers_sum_price'] >= item_stickers_sum:
                 send_autobuy_notification(item)
                 buy(item)
                 return

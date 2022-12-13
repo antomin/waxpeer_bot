@@ -1,5 +1,5 @@
 import time
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ProcessPoolExecutor, wait
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,7 +7,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from common import get_driver
 from handlers import parse_item
-from telegram import bot
 
 URL = 'https://waxpeer.com/?game=csgo&sort=DESC&order=date&all=0&exterior=FN&exterior=MW&exterior=FT&exterior=WW&exterior=BS'
 
@@ -26,7 +25,7 @@ def main():
             futures = []
             items = driver.find_elements(By.XPATH, '//div[@class="item_wrap"]')
 
-            with ThreadPoolExecutor() as executor:
+            with ProcessPoolExecutor() as executor:
                 for item in items:
                     futures.append(executor.submit(parse_item, item))
 
@@ -44,6 +43,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # bot.polling(none_stop=True, allowed_updates=False)
     while True:
         main()

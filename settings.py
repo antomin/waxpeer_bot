@@ -1,14 +1,19 @@
 import os
-
+# System options
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HEADLESS = False
 
-REPEAT_MSG = False
+#
+CACHE_ENABLE = False
 
 TG_TOKEN = '5626409225:AAGd_x4-uKVal507aOGW8cq2Mva3WT8nR20'
 CHAT_ID = '-1001824416043'
 
 STICKER_SEARCH_STRING = ''
+
+EXCEPTIONS = [
+    '',
+]
 
 STICKERS_AUTOBUY_TERMS = {
     250: 500,
