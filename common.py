@@ -10,7 +10,8 @@ RARITY_DICT = {
     'color: rgb(75, 105, 255);': 'Mil-Spec Grade',
     'color: rgb(136, 71, 255);': 'Restricted',
     'color: rgb(211, 44, 230);': 'Classified',
-    'color: rgb(235, 75, 75);': 'Covert'
+    'color: rgb(235, 75, 75);': 'Covert',
+
 }
 
 

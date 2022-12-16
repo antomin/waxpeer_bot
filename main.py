@@ -1,5 +1,4 @@
 import time
-from concurrent.futures import ProcessPoolExecutor, wait
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,31 +14,27 @@ def main():
     driver = get_driver()
     driver_wait = WebDriverWait(driver, 10)
 
-    try:
-        driver.get(URL)
-        time.sleep(3)
-        driver_wait.until(EC.presence_of_element_located((By.XPATH, '//i[@class="i-times f14"]'))).click()
+    # try:
+    driver.get(URL)
+    time.sleep(5)
+    driver_wait.until(EC.presence_of_element_located((By.XPATH, '//i[@class="i-times f14"]'))).click()
+    driver_wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="catalog__list"]')))
+
+    while True:
+        items = driver.find_elements(By.XPATH, '//div[@class="item_wrap"]')
+
+        for item in items:
+            parse_item(item)
+
+        driver.refresh()
         driver_wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="catalog__list"]')))
 
-        while True:
-            futures = []
-            items = driver.find_elements(By.XPATH, '//div[@class="item_wrap"]')
-
-            with ProcessPoolExecutor() as executor:
-                for item in items:
-                    futures.append(executor.submit(parse_item, item))
-
-            wait(futures)
-
-            driver.refresh()
-            driver_wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="catalog__list"]')))
-
-    except Exception as error:
-        print(error)
-
-    finally:
-        driver.close()
-        driver.quit()
+    # except Exception as error:
+    #     print(error)
+    #
+    # finally:
+    #     driver.close()
+    #     driver.quit()
 
 
 if __name__ == '__main__':

@@ -13,9 +13,9 @@ def parse_item(item):
     if CACHE_ENABLE and item_id in read_cache():
         return
     name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
-    for string in EXCEPTIONS:
-        if string in name_model:
-            return
+    # for string in EXCEPTIONS:
+    #     if string in name_model:
+    #         return
     stickers_info = get_stickers(item)
     if stickers_info == 'search_not_found':
         return
@@ -39,8 +39,9 @@ def parse_item(item):
         'stickers_sum_price': stickers_info[1],
         'rarity': RARITY_DICT.get(rarity)
     }
-
+    print(item_content)
     item_handler(item_content)
+
     if CACHE_ENABLE:
         write_to_cache(item_content['id'])
 
