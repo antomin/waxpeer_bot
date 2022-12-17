@@ -2,27 +2,52 @@ from selenium.webdriver.common.by import By
 
 from common import RARITY_DICT, read_cache, write_to_cache
 from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING,
-                      STICKERS_AUTOBUY_TERMS, EXCEPTIONS, CACHE_ENABLE)
+                      STICKERS_AUTOBUY_TERMS, NAME_EXCEPTIONS, CACHE_ENABLE, KNIFE_COVERT_LIST, GLOVES_COVERT_LIST,
+                      MIN_STICKERS_SUM)
 from telegram import send_notification, send_autobuy_notification
 from waxpeer_api import buy
 
 
 def parse_item(item):
-    item_url = item.find_element(By.XPATH, './div[@class="item_body"]/a').get_attribute('href')
+    try:
+        item_url = item.find_element(By.XPATH, './div[@class="item_body"]/a').get_attribute('href')
+    except:
+        item_url = 'https://waxpeer.com'
+
     item_id = item_url.split('/')[-1]
+
     if CACHE_ENABLE and item_id in read_cache():
         return
-    name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
-    # for string in EXCEPTIONS:
-    #     if string in name_model:
-    #         return
+
+    try:
+        name_model = item.find_element(By.XPATH, './/a[@class="name ovh"]').text
+    except:
+        name_model = ''
+
     stickers_info = get_stickers(item)
     if stickers_info == 'search_not_found':
         return
-    price = item.find_element(By.XPATH, './/div[@class="prices f"]//span[@class="c-usd"]').text
-    steam_price = item.find_element(By.XPATH, './/div[@class="item_top f ft gray"]//span[@class="c-usd"]').text
-    name_gray = item.find_element(By.XPATH, './/div[@class="gray"]').text
-    rarity = item.find_element(By.XPATH, './/div[@class="thumb_bg"]').get_attribute('style')
+
+    try:
+        price = item.find_element(By.XPATH, './/div[@class="prices f"]//span[@class="c-usd"]').text
+    except:
+        return
+
+    try:
+        steam_price = item.find_element(By.XPATH, './/div[@class="item_top f ft gray"]//span[@class="c-usd"]').text
+    except:
+        return
+
+    try:
+        name_gray = item.find_element(By.XPATH, './/div[@class="gray"]').text
+    except:
+        name_gray = ''
+
+    try:
+        rarity = item.find_element(By.XPATH, './/div[@class="thumb_bg"]').get_attribute('style')
+    except:
+        rarity = ''
+
     try:
         item_float = item.find_element(By.XPATH, './/p[@class="num"]').text
     except:
@@ -39,7 +64,12 @@ def parse_item(item):
         'stickers_sum_price': stickers_info[1],
         'rarity': RARITY_DICT.get(rarity)
     }
-    print(item_content)
+
+    for string in NAME_EXCEPTIONS:
+        if string in item_content['title']:
+            return
+
+    print(item_content['url'])
     item_handler(item_content)
 
     if CACHE_ENABLE:
@@ -49,48 +79,72 @@ def parse_item(item):
 def get_stickers(item):
     stickers = []
     sum_price = 0
+
     try:
         sticker_list = item.find_elements(By.XPATH, './/li[@class="stickers_item ttip"]/div')
+
+        for sticker in sticker_list:
+            sticker_info = sticker.find_elements(By.XPATH, './p')
+            sticker_name = sticker_info[0].get_attribute('innerHTML')
+            if STICKER_SEARCH_STRING and STICKER_SEARCH_STRING not in sticker_name:
+                stickers.append(None)
+                continue
+            try:
+                sticker_price = float(sticker.find_element(By.XPATH, './/span[@class="c-usd"]').get_attribute('innerHTML'))
+            except:
+                sticker_price = 0
+            try:
+                sticker_wear = sticker_info[1].find_elements(By.TAG_NAME, 'span')
+                sticker_wear_value = sticker_wear[1].get_attribute('innerHTML')
+            except:
+                sticker_wear_value = None
+            stickers.append({'name': sticker_name, 'wear': sticker_wear_value, 'price': sticker_price})
+            sum_price += sticker_price if sticker_price else 0
+
+        if STICKER_SEARCH_STRING and all(i is None for i in stickers):
+            return 'search_not_found'
     except:
         return None
-    for sticker in sticker_list:
-        sticker_info = sticker.find_elements(By.XPATH, './p')
-        sticker_name = sticker_info[0].get_attribute('innerHTML')
-        if STICKER_SEARCH_STRING and STICKER_SEARCH_STRING not in sticker_name:
-            stickers.append(None)
-            continue
-        try:
-            sticker_price = float(sticker.find_element(By.XPATH, './/span[@class="c-usd"]').get_attribute('innerHTML'))
-        except:
-            sticker_price = None
-        try:
-            sticker_wear = sticker_info[1].find_elements(By.TAG_NAME, 'span')
-            sticker_wear_value = sticker_wear[1].get_attribute('innerHTML')
-        except:
-            sticker_wear_value = None
-        stickers.append({'name': sticker_name, 'wear': sticker_wear_value, 'price': sticker_price})
-        sum_price += sticker_price if sticker_price else 0
-    if STICKER_SEARCH_STRING and all(i is None for i in stickers):
-        return 'search_not_found'
+
     return stickers, round(sum_price, 2)
 
 
 def item_handler(item):
-    # AUTO BUY BY STICKERS SUM PRICE
     if item['stickers']:
+        # AUTO BUY BY STICKERS SUM PRICE
         for item_price, item_stickers_sum in STICKERS_AUTOBUY_TERMS.items():
             if item['price'] <= item_price and item['stickers_sum_price'] >= item_stickers_sum:
                 send_autobuy_notification(item)
                 buy(item)
                 return
 
-    # AUTO BUY BY FLOAT
-    if item['item_float'] and item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
-            item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
-        send_autobuy_notification(item)
-        buy(item)
-        return
+        # NOTIFICATION BY STICKERS SUM
+        if item['stickers_sum_price'] >= MIN_STICKERS_SUM:
+            send_notification(item)
 
-    # NOTIFICATION BY FLOAT
-    if item['item_float'] and item['item_float'] <= FLOAT_NOTIFICATION_TERMS[item['rarity']]:
-        send_notification(item)
+    if item['item_float'] and item['rarity']:
+        # AUTO BUY BY FLOAT
+        if item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
+                item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
+            send_autobuy_notification(item)
+            return
+
+        # NOTIFICATION BY FLOAT
+        if item['item_float'] <= FLOAT_NOTIFICATION_TERMS[item['rarity']]:
+            send_notification(item)
+            return
+
+        # COVERT
+        if item['rarity'] == 'Covert':
+            # KNIFES
+            for item_name in KNIFE_COVERT_LIST['items']:
+                if item_name in item['title'] and item['item_float'] <= KNIFE_COVERT_LIST['range']:
+                    send_notification(item)
+                    return
+            # GLOVES
+            for item_name in GLOVES_COVERT_LIST['items']:
+                if item_name in item['title']:
+                    for fl_range in GLOVES_COVERT_LIST['ranges']:
+                        if fl_range[0] <= item['item_float'] <= fl_range[1]:
+                            send_notification(item)
+                            return
