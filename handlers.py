@@ -4,8 +4,8 @@ from common import RARITY_DICT, read_cache, write_to_cache
 from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING,
                       STICKERS_AUTOBUY_TERMS, NAME_EXCEPTIONS, CACHE_ENABLE, KNIFE_COVERT_LIST, GLOVES_COVERT_LIST,
                       MIN_STICKERS_SUM)
-from telegram import send_notification, send_autobuy_notification
-from waxpeer_api import buy
+from telegram import send_notification
+from waxpeer_api import auto_bay_item
 
 
 def parse_item(item):
@@ -69,7 +69,6 @@ def parse_item(item):
         if string in item_content['title']:
             return
 
-    print(item_content['url'])
     item_handler(item_content)
 
     if CACHE_ENABLE:
@@ -90,7 +89,8 @@ def get_stickers(item):
                 stickers.append(None)
                 continue
             try:
-                sticker_price = float(sticker.find_element(By.XPATH, './/span[@class="c-usd"]').get_attribute('innerHTML'))
+                sticker_price = float(
+                    sticker.find_element(By.XPATH, './/span[@class="c-usd"]').get_attribute('innerHTML'))
             except:
                 sticker_price = 0
             try:
@@ -114,8 +114,8 @@ def item_handler(item):
         # AUTO BUY BY STICKERS SUM PRICE
         for item_price, item_stickers_sum in STICKERS_AUTOBUY_TERMS.items():
             if item['price'] <= item_price and item['stickers_sum_price'] >= item_stickers_sum:
-                send_autobuy_notification(item)
-                buy(item)
+                result = auto_bay_item(item)
+                send_notification(item=item, result=result)
                 return
 
         # NOTIFICATION BY STICKERS SUM
@@ -126,12 +126,8 @@ def item_handler(item):
         # AUTO BUY BY FLOAT
         if item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
                 item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
-            send_autobuy_notification(item)
-            return
-
-        # NOTIFICATION BY FLOAT
-        if item['item_float'] <= FLOAT_NOTIFICATION_TERMS[item['rarity']]:
-            send_notification(item)
+            result = auto_bay_item(item)
+            send_notification(item=item, result=result)
             return
 
         # COVERT
@@ -144,7 +140,7 @@ def item_handler(item):
             # GLOVES
             for item_name in GLOVES_COVERT_LIST['items']:
                 if item_name in item['title']:
-                    for fl_range in GLOVES_COVERT_LIST['ranges']:
-                        if fl_range[0] <= item['item_float'] <= fl_range[1]:
+                    for float_range in GLOVES_COVERT_LIST['ranges']:
+                        if float_range[0] <= item['item_float'] <= float_range[1]:
                             send_notification(item)
                             return

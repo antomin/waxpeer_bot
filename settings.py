@@ -1,7 +1,7 @@
 import os
 # System options
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HEADLESS = True
+HEADLESS = False
 CACHE_ENABLE = True
 
 TG_TOKEN = '5626409225:AAGd_x4-uKVal507aOGW8cq2Mva3WT8nR20'

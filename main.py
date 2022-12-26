@@ -1,5 +1,4 @@
 import time
-from concurrent.futures import ProcessPoolExecutor, wait
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,20 +16,25 @@ def main():
 
     try:
         driver.get(URL)
-        time.sleep(10)
+        time.sleep(5)
         driver_wait.until(EC.presence_of_element_located((By.XPATH, '//i[@class="i-times f14"]'))).click()
         driver_wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="catalog__list"]')))
 
         while True:
-            t = time.time()
             items = driver.find_elements(By.XPATH, '//div[@class="item_wrap"]')
 
             for item in items:
                 parse_item(item)
 
-            driver.refresh()
+            # driver.refresh()
+
+            driver.find_element(By.XPATH, '//button[@class="btn-dark ordersort-top__order cselect_d"]').click()
+            time.sleep(1)
+            menus = driver.find_elements(
+                By.XPATH, '//div[@class="cselect ordersort open"]//ul[@class="list cselect__list"]/li'
+            )
+            menus[1].click()
             driver_wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="catalog__list"]')))
-            print(time.time() - t)
     except Exception as error:
         print(error)
 
