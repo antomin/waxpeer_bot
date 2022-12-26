@@ -1,8 +1,8 @@
 import telebot
 from telebot import types
 
-from settings import CHAT_ID, TG_TOKEN
 from common import generate_message
+from settings import CHAT_ID, TG_TOKEN
 from waxpeer_api import buy_item
 
 bot = telebot.TeleBot(TG_TOKEN)

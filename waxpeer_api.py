@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from settings import WAXPEER_API_KEY, STEAM_TOKEN, STEAM_PARTNER
+from settings import STEAM_PARTNER, STEAM_TOKEN, WAXPEER_API_KEY
 
 HEADERS = {'accept': 'application/json'}
 

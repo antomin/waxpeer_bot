@@ -1,9 +1,10 @@
 from selenium.webdriver.common.by import By
 
 from common import RARITY_DICT, read_cache, write_to_cache
-from settings import (FLOAT_AUTOBUY_TERMS, FLOAT_NOTIFICATION_TERMS, STICKER_SEARCH_STRING,
-                      STICKERS_AUTOBUY_TERMS, NAME_EXCEPTIONS, CACHE_ENABLE, KNIFE_COVERT_LIST, GLOVES_COVERT_LIST,
-                      MIN_STICKERS_SUM)
+from settings import (CACHE_ENABLE, FLOAT_AUTOBUY_TERMS,
+                      FLOAT_NOTIFICATION_TERMS, GLOVES_COVERT_LIST,
+                      KNIFE_COVERT_LIST, MIN_STICKERS_SUM, NAME_EXCEPTIONS,
+                      STICKER_SEARCH_STRING, STICKERS_AUTOBUY_TERMS)
 from telegram import send_notification
 from waxpeer_api import auto_bay_item
 
@@ -125,7 +126,8 @@ def item_handler(item):
     if item['item_float'] and item['rarity']:
         # AUTO BUY BY FLOAT
         if item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
-                item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
+                item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)) and \
+                item['price'] <= item['steam_price'] * 2:
             result = auto_bay_item(item)
             send_notification(item=item, result=result)
             return
