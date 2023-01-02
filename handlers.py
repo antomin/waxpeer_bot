@@ -127,8 +127,7 @@ def item_handler(item):
     if item['item_float'] and item['rarity']:
         # AUTO BUY BY FLOAT
         if item['item_float'] <= FLOAT_AUTOBUY_TERMS[item['rarity']][0] and \
-                item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)) and \
-                item['price'] <= item['steam_price'] * 2:
+                item['price'] <= item['steam_price'] * (1 + (FLOAT_AUTOBUY_TERMS[item['rarity']][1] / 100)):
             result = auto_bay_item(item)
             send_notification(item=item, result=result)
             return
