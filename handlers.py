@@ -114,7 +114,8 @@ def item_handler(item):
     if item['stickers']:
         # AUTO BUY BY STICKERS SUM PRICE
         for item_price, item_stickers_sum in STICKERS_AUTOBUY_TERMS.items():
-            if item['price'] <= item_price and item['stickers_sum_price'] >= item_stickers_sum:
+            if item['price'] <= item_price and item['stickers_sum_price'] >= item_stickers_sum and \
+                    item['price'] <= item['steam_price'] * 2:
                 result = auto_bay_item(item)
                 send_notification(item=item, result=result)
                 return
