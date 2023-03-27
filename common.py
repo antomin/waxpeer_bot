@@ -40,7 +40,7 @@ def get_driver():
     options.add_argument('--start-maximized')
     options.add_argument('--lang=en-US')
     options.headless = HEADLESS
-    return undetected_chromedriver.Chrome(options=options, driver_executable_path=f'{BASE_DIR}/undetected_chrome')
+    return undetected_chromedriver.Chrome(options=options, driver_executable_path=f'{BASE_DIR}/chromedriver')
 
 
 def generate_message(item):
